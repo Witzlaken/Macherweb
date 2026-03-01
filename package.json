@@ -1,0 +1,12 @@
+{
+  "name": "macher-buissnes",
+  "version": "1.0.0",
+  "description": "Macher Buissnes Management Panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

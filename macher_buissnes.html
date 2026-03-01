@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MACHER BUISSNES – Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #13131a;
+    --bg3: #1a1a26;
+    --card: #1c1c28;
+    --border: #2a2a45;
+    --accent: #c0392b;
+    --accent2: #e74c3c;
+    --purple: #7c3aed;
+    --green: #10b981;
+    --gold: #f59e0b;
+    --text: #e8e8f0;
+    --text2: #9090b0;
+    --text3: #5a5a80;
+    --red-glow: 0 0 20px rgba(192,57,43,0.3);
+    --purple-glow: 0 0 20px rgba(124,58,237,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* LOGIN */
+  #loginScreen { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(ellipse at 30% 40%, #1a0a0a 0%, #0d0d0f 60%); display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .login-logo { font-family: 'Rajdhani', sans-serif; font-size: 3rem; font-weight: 700; letter-spacing: 0.3em; color: var(--text); text-shadow: 0 0 40px rgba(192,57,43,0.6); margin-bottom: 0.5rem; }
+  .login-sub { color: var(--text3); letter-spacing: 0.2em; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 3rem; }
+  .login-card { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--accent); border-radius: 12px; padding: 2.5rem; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), var(--red-glow); }
+  .login-card h2 { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 1.5rem; text-transform: uppercase; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text3); margin-bottom: 0.4rem; }
+  .form-group input, .form-group select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 1rem; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(192,57,43,0.15); }
+  .login-error { color: var(--accent2); font-size: 0.8rem; margin-bottom: 0.8rem; display: none; }
+  .btn-primary { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 6px; padding: 0.8rem; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* APP */
+  #app { display: none; min-height: 100vh; flex-direction: column; }
+  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0.8rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-logo { font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text); text-shadow: 0 0 20px rgba(192,57,43,0.4); }
+  .topbar-info { display: flex; gap: 2rem; align-items: center; }
+  .ov-stat { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text2); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-red { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-blue { background: #60a5fa; box-shadow: 0 0 6px #60a5fa; }
+  .label { color: var(--text3); display: block; font-size: 0.65rem; }
+  .val { font-weight: 600; color: var(--text); }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+  .btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 5px; padding: 0.3rem 0.8rem; color: var(--text3); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; font-family: 'Exo 2', sans-serif; }
+  .btn-logout:hover { border-color: var(--accent); color: var(--accent2); }
+
+  /* OVERVIEW */
+  #viewOverview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 50%, #150808 0%, #0d0d0f 70%); }
+  .overview-title { font-family: 'Rajdhani', sans-serif; font-size: 2rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--text); margin-bottom: 0.3rem; text-shadow: 0 0 30px rgba(192,57,43,0.5); }
+  .overview-sub { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--text3); text-transform: uppercase; margin-bottom: 3rem; }
+  .overview-grid { display: grid; grid-template-columns: repeat(2, 200px); grid-template-rows: repeat(2, 200px); gap: 1.5rem; }
+  .ov-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+  .ov-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(192,57,43,0.05) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s; }
+  .ov-card:hover::before { opacity: 1; }
+  .ov-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0,0,0,0.4), var(--red-glow); }
+  .ov-card-icon { width: 70px; height: 70px; background: var(--bg3); border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+  .ov-card-label { font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 0.1em; color: var(--text); text-transform: uppercase; }
+  .ov-card-btn { background: var(--accent); border: none; border-radius: 5px; padding: 0.4rem 1.5rem; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
+  .ov-card-btn:hover { background: var(--accent2); }
+
+  /* VIEW PAGES */
+  .view-page { display: none; flex: 1; padding: 1.5rem; flex-direction: column; gap: 1.5rem; background: var(--bg); }
+  .view-page.active { display: flex; }
+  .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 1rem; color: var(--text2); font-family: 'Exo 2', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; align-self: flex-start; }
+  .back-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; position: relative; overflow: hidden; }
+  .stat-card .stat-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
+  .stat-card .stat-num { font-size: 2rem; font-weight: 700; color: var(--text); display: block; }
+  .stat-card .stat-label { font-size: 0.75rem; color: var(--text2); }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; }
+  .panel-title { font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .panel-title .dot-small { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+  .btn-sm { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 6px; padding: 0.6rem 1.5rem; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.1em; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; }
+  .btn-sm:hover { opacity: 0.85; }
+
+  /* TIMER */
+  .timer-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+  .timer-label { font-size: 0.75rem; color: var(--text2); margin-bottom: 0.3rem; }
+  .timer-display { font-size: 2rem; font-weight: 700; font-family: 'Rajdhani', sans-serif; color: var(--text); letter-spacing: 0.05em; transition: color 0.3s; }
+  .timer-display.running { color: var(--green); }
+  .timer-display.urgent { color: var(--accent2); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .timer-btn { margin-top: 0.8rem; width: 100%; font-size: 0.85rem; }
+  .timer-btn.stop { background: linear-gradient(135deg, #374151, #4b5563); }
+
+  /* PREISLISTE */
+  .price-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.7rem 0.8rem; border-radius: 6px; background: var(--bg3);
+    border: 1px solid var(--border); margin-bottom: 0.5rem; transition: border-color 0.2s;
+  }
+  .price-item:hover { border-color: var(--border); }
+  .price-item .pi-name { font-size: 0.88rem; color: var(--text); font-weight: 500; }
+  .price-item .pi-prices { font-size: 0.75rem; color: var(--text2); margin-top: 0.1rem; }
+  .price-item-actions { display: flex; align-items: center; gap: 0.4rem; }
+
+  .edit-btn { background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text3); font-size: 0.72rem; padding: 0.2rem 0.45rem; cursor: pointer; transition: all 0.2s; }
+  .edit-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .del-btn { background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text3); font-size: 0.72rem; padding: 0.2rem 0.45rem; cursor: pointer; transition: all 0.2s; }
+  .del-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+  /* PURCHASE LIST */
+  .purchase-list { max-height: 350px; overflow-y: auto; }
+  .purchase-item { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.8rem; border-radius: 6px; background: var(--bg3); border: 1px solid var(--border); margin-bottom: 0.5rem; }
+  .pi-seller { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+  .pi-buyer { font-size: 0.72rem; color: var(--text2); }
+  .pi-price { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; color: var(--green); }
+  .bank-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .purchase-form .form-group { margin-bottom: 0.8rem; }
+
+  /* USER */
+  .settings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .big-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; border: 2px solid var(--border); }
+
+  /* UPGRADES */
+  .upgrade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .upgrade-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .upgrade-card:hover { border-color: var(--purple); box-shadow: 0 0 15px rgba(124,58,237,0.2); }
+  .upgrade-card .uc-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upgrade-card .uc-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+  .upgrade-card .uc-cost { font-size: 0.75rem; color: var(--gold); margin-top: 0.3rem; }
+  .upgrade-card .uc-desc { font-size: 0.7rem; color: var(--text3); margin-top: 0.3rem; }
+  .upgrade-card.owned { border-color: var(--green); background: rgba(16,185,129,0.05); }
+  .uc-badge { display: inline-block; background: var(--green); color: #fff; font-size: 0.6rem; border-radius: 20px; padding: 0.1rem 0.5rem; margin-top: 0.3rem; }
+
+  /* ADMIN */
+  #adminPanel { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
+  #adminPanel.open { display: flex; }
+  .admin-modal { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--purple); border-radius: 12px; padding: 2rem; width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6), var(--purple-glow); }
+  .admin-modal-title { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .close-btn { background: transparent; border: none; color: var(--text3); font-size: 1.2rem; cursor: pointer; transition: color 0.2s; }
+  .close-btn:hover { color: var(--accent2); }
+  .admin-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .admin-tab { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 1rem; color: var(--text2); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; font-family: 'Exo 2', sans-serif; }
+  .admin-tab.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.8rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.5rem; }
+  .ul-name { font-size: 0.85rem; color: var(--text); }
+  .ul-role { font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 20px; background: var(--bg); border: 1px solid var(--border); color: var(--text3); }
+  .ul-role.admin { border-color: var(--accent); color: var(--accent2); }
+
+  /* MODAL GENERIC */
+  .modal-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.75); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); border-radius: 12px; padding: 1.8rem; width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .modal-box h3 { font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+
+  /* DISCORD WEBHOOK SETTINGS */
+  .webhook-box { background: rgba(88,101,242,0.08); border: 1px solid rgba(88,101,242,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+  .webhook-box label { color: #7289da; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--card); border: 1px solid var(--green); border-radius: 8px; padding: 0.8rem 1.2rem; color: var(--text); font-size: 0.85rem; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s; box-shadow: 0 5px 20px rgba(0,0,0,0.4); max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--accent); }
+  .toast.discord { border-color: #7289da; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .ov-card:nth-child(1) { animation: fadeIn 0.25s ease forwards 0.05s; opacity:0; }
+  .ov-card:nth-child(2) { animation: fadeIn 0.25s ease forwards 0.1s; opacity:0; }
+  .ov-card:nth-child(3) { animation: fadeIn 0.25s ease forwards 0.15s; opacity:0; }
+  .ov-card:nth-child(4) { animation: fadeIn 0.25s ease forwards 0.2s; opacity:0; }
+
+  .admin-fab { position: fixed; bottom: 1.5rem; left: 1.5rem; background: linear-gradient(135deg, var(--purple), #9333ea); border: none; border-radius: 8px; padding: 0.6rem 1rem; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; display: none; align-items: center; gap: 0.4rem; box-shadow: 0 4px 20px rgba(124,58,237,0.4); transition: opacity 0.2s; z-index: 100; }
+  .admin-fab:hover { opacity: 0.85; }
+  .discord-status { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; color: var(--text3); }
+  .discord-dot { width: 6px; height: 6px; border-radius: 50%; background: #555; }
+  .discord-dot.active { background: #57f287; box-shadow: 0 0 5px #57f287; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">MACHER BUISSNES</div>
+  <div class="login-sub">Management System</div>
+  <div class="login-card">
+    <h2>Anmelden</h2>
+    <div class="login-error" id="loginError">Ungültige Anmeldedaten</div>
+    <div class="form-group"><label>Benutzername</label><input type="text" id="loginUser" placeholder="Benutzername eingeben" autocomplete="off"></div>
+    <div class="form-group"><label>Passwort</label><input type="password" id="loginPass" placeholder="Passwort eingeben"></div>
+    <button class="btn-primary" onclick="doLogin()">EINLOGGEN</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">MACHER BUISSNES</div>
+    <div class="topbar-info">
+      <div class="ov-stat">
+        <div class="dot dot-red"></div>
+        <div><span class="label">Macher Buissnes</span><span class="val">Diresch</span></div>
+      </div>
+      <div class="ov-stat">
+        <div class="dot dot-blue"></div>
+        <div><span class="label">Member</span><span class="val" id="memberCount">0</span></div>
+      </div>
+      <div class="ov-stat">
+        <div class="dot dot-green"></div>
+        <div><span class="label">Online</span><span class="val">1</span></div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="user-avatar" id="userAvatarTop">A</div>
+        <span style="font-size:0.85rem; color:var(--text2);" id="userNameTop">Admin</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="viewOverview" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div class="overview-title">MACHER BUISSNES</div>
+    <div class="overview-sub">Menu</div>
+    <div class="overview-grid">
+      <div class="ov-card" onclick="showView('ubersicht')">
+        <div class="ov-card-icon">🔍</div>
+        <div class="ov-card-label">Übersicht</div>
+        <button class="ov-card-btn">Anzeigen</button>
+      </div>
+      <div class="ov-card" onclick="showView('bank')">
+        <div class="ov-card-icon">🏦</div>
+        <div class="ov-card-label">Bank</div>
+        <button class="ov-card-btn">Anzeigen</button>
+      </div>
+      <div class="ov-card" onclick="showView('user')">
+        <div class="ov-card-icon">👤</div>
+        <div class="ov-card-label">User</div>
+        <button class="ov-card-btn">Anzeigen</button>
+      </div>
+      <div class="ov-card" onclick="showView('upgrades')">
+        <div class="ov-card-icon">🚀</div>
+        <div class="ov-card-label">Upgrades</div>
+        <button class="ov-card-btn">Anzeigen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÜBERSICHT VIEW -->
+  <div class="view-page" id="viewUbersicht">
+    <button class="back-btn" onclick="goBack()">← Zurück</button>
+
+    <!-- Stats: nur Members + Preisliste -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(192,57,43,0.15);">👥</div>
+        <span class="stat-num" id="statMembers">0</span>
+        <span class="stat-label">Members</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.15);">💰</div>
+        <span class="stat-num" id="statPreisliste">0</span>
+        <span class="stat-label">Preisliste Items</span>
+      </div>
+    </div>
+
+    <!-- Timer FULLWIDTH -->
+    <div class="panel">
+      <div class="panel-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:0.5rem;"><div class="dot-small"></div>Aktivität Timer</span>
+        <div class="discord-status">
+          <div class="discord-dot" id="discordDot"></div>
+          <span id="discordStatusText">Discord: nicht konfiguriert</span>
+          <button onclick="openWebhookSettings()" style="background:rgba(88,101,242,0.2);border:1px solid rgba(88,101,242,0.4);border-radius:4px;color:#7289da;font-size:0.65rem;padding:0.15rem 0.5rem;cursor:pointer;font-family:'Exo 2',sans-serif;">⚙ Webhook</button>
+        </div>
+      </div>
+      <div id="timerGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <!-- Camper Timer -->
+        <div class="timer-box">
+          <div class="timer-label">⏰ Camper – 90 Min</div>
+          <div class="timer-display" id="timerCamper">01:30:00</div>
+          <div style="margin-top:0.5rem; font-size:0.7rem; color:var(--text3);" id="timerCamperStatus">Inaktiv</div>
+          <button class="btn-sm timer-btn" id="btnCamper" style="background:linear-gradient(135deg,#7c3aed,#9333ea);" onclick="toggleTimer('camper')">▶ Start (1h30)</button>
+        </div>
+        <!-- Pflanzen Timer -->
+        <div class="timer-box">
+          <div class="timer-label">🌿 Pflanzen – 730 Min</div>
+          <div class="timer-display" id="timerPflanzen">12:10:00</div>
+          <div style="margin-top:0.5rem; font-size:0.7rem; color:var(--text3);" id="timerPflanzenStatus">Inaktiv</div>
+          <button class="btn-sm timer-btn" id="btnPflanzen" style="background:linear-gradient(135deg,#059669,#10b981);" onclick="toggleTimer('pflanzen')">▶ Start (~12h)</button>
+        </div>
+        <!-- Admin Test Timer -->
+        <div class="timer-box" id="testTimerBox" style="display:none; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.04); position:relative;">
+          <div style="position:absolute;top:0.4rem;right:0.5rem; font-size:0.55rem; background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); color:var(--gold); border-radius:4px; padding:0.1rem 0.35rem; letter-spacing:0.08em;">ADMIN TEST</div>
+          <div class="timer-label" style="color:var(--gold);">🧪 Test-Timer – 10 Sek</div>
+          <div class="timer-display" id="timerTest">00:00:10</div>
+          <div style="margin-top:0.5rem; font-size:0.7rem; color:var(--text3);" id="timerTestStatus">Inaktiv</div>
+          <button class="btn-sm timer-btn" id="btnTest" style="background:linear-gradient(135deg,#b45309,#f59e0b); color:#000;" onclick="toggleTimer('test')">▶ Start (10s)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preisliste bearbeitbar -->
+    <div class="panel">
+      <div class="panel-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:0.5rem;"><div class="dot-small"></div>Preisliste – <span id="preislisteCount">0</span> Items</span>
+        <button class="btn-sm" style="padding:0.35rem 0.9rem; font-size:0.78rem;" onclick="openAddPrice()">+ Hinzufügen</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;" id="preislisteGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- BANK VIEW -->
+  <div class="view-page" id="viewBank">
+    <button class="back-btn" onclick="goBack()">← Zurück</button>
+    <div class="bank-layout">
+      <div class="panel">
+        <div class="panel-title"><div class="dot-small"></div>Neuer Einkauf</div>
+        <div class="purchase-form">
+          <div class="form-group"><label>Name des Verkäufers</label><input type="text" id="bSeller" placeholder="Verkäufer..."></div>
+          <div class="form-group"><label>Einkaufspreis ($)</label><input type="number" id="bPrice" placeholder="0"></div>
+          <div class="form-group"><label>Name des Käufers</label><input type="text" id="bBuyer" placeholder="Käufer..."></div>
+          <button class="btn-sm" style="width:100%; margin-top:0.5rem;" onclick="addPurchase()">+ Einkauf Hinzufügen</button>
+        </div>
+        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; color:var(--text2); font-size:0.8rem; margin-bottom:0.5rem;">
+            <span>Gesamtumsatz</span><span style="color:var(--green); font-weight:700;" id="totalRevenue">$0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:var(--text2); font-size:0.8rem;">
+            <span>Anzahl Einkäufe</span><span style="color:var(--text); font-weight:700;" id="purchaseCount">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><div class="dot-small"></div>Letzte Einkäufe</div>
+        <div class="purchase-list" id="purchaseList"><div style="text-align:center; color:var(--text3); padding:2rem; font-size:0.85rem;">Noch keine Einkäufe vorhanden</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER VIEW -->
+  <div class="view-page" id="viewUser">
+    <button class="back-btn" onclick="goBack()">← Zurück</button>
+    <div class="settings-layout">
+      <div class="panel">
+        <div class="panel-title"><div class="dot-small"></div>Profil</div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding:1.5rem;">
+          <div class="big-avatar" id="bigAvatar">A</div>
+          <div style="font-size:1rem; font-weight:600;" id="profileName">Admin</div>
+          <div style="font-size:0.75rem; color:var(--accent2);" id="profileRole">Administrator</div>
+        </div>
+        <div style="padding-top:1rem; border-top:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text2); padding:0.4rem 0;">
+            <span>Benutzername</span><span style="color:var(--text);" id="profileUsername">-</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text2); padding:0.4rem 0;">
+            <span>Rolle</span><span style="color:var(--text);" id="profileRoleText">Admin</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><div class="dot-small"></div>Einstellungen</div>
+        <div class="form-group"><label>Anzeigename ändern</label><input type="text" id="newDisplayName" placeholder="Neuer Name..."></div>
+        <div class="form-group"><label>Passwort ändern</label><input type="password" id="newPassword" placeholder="Neues Passwort..."></div>
+        <div class="form-group"><label>Passwort bestätigen</label><input type="password" id="confirmPassword" placeholder="Passwort wiederholen..."></div>
+        <button class="btn-sm" style="width:100%; margin-top:0.5rem;" onclick="saveSettings()">Einstellungen speichern</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><div class="dot-small"></div>Statistiken</div>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; text-align:center;">
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <div style="font-size:1.5rem; font-weight:700; color:var(--text);" id="userPurchaseCount">0</div>
+          <div style="font-size:0.75rem; color:var(--text2);">Einkäufe</div>
+        </div>
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <div style="font-size:1.5rem; font-weight:700; color:var(--green);" id="userMemberCount">0</div>
+          <div style="font-size:0.75rem; color:var(--text2);">Members gesamt</div>
+        </div>
+        <div style="background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <div style="font-size:1.5rem; font-weight:700; color:var(--gold);" id="userPreisCount">0</div>
+          <div style="font-size:0.75rem; color:var(--text2);">Preisliste Items</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPGRADES VIEW -->
+  <div class="view-page" id="viewUpgrades">
+    <button class="back-btn" onclick="goBack()">← Zurück</button>
+    <div class="panel">
+      <div class="panel-title"><div class="dot-small"></div>Verfügbare Upgrades</div>
+      <div class="upgrade-grid">
+        <div class="upgrade-card owned" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">🛡️</div><div class="uc-name">Schutzweste</div>
+          <div class="uc-cost">$5.000</div><div class="uc-desc">Erhöht Schutz um 20%</div>
+          <div class="uc-badge">BESESSEN</div>
+        </div>
+        <div class="upgrade-card" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">⚡</div><div class="uc-name">Boost Pack</div>
+          <div class="uc-cost">$12.000</div><div class="uc-desc">Erhöht Speed um 15%</div>
+        </div>
+        <div class="upgrade-card" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">🔫</div><div class="uc-name">Waffen-Mod</div>
+          <div class="uc-cost">$25.000</div><div class="uc-desc">+30% Schaden</div>
+        </div>
+        <div class="upgrade-card owned" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">🏎️</div><div class="uc-name">Fahrzeug-Upgrade</div>
+          <div class="uc-cost">$40.000</div><div class="uc-desc">Tuning & Nitro</div>
+          <div class="uc-badge">BESESSEN</div>
+        </div>
+        <div class="upgrade-card" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">📡</div><div class="uc-name">Funk-Upgrade</div>
+          <div class="uc-cost">$8.000</div><div class="uc-desc">Mehr Frequenzen</div>
+        </div>
+        <div class="upgrade-card owned" onclick="toggleUpgrade(this)">
+          <div class="uc-icon">💊</div><div class="uc-name">Med-Kit</div>
+          <div class="uc-cost">$3.000</div><div class="uc-desc">Schnellere Heilung</div>
+          <div class="uc-badge">BESESSEN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-modal">
+    <div class="admin-modal-title">Admin Panel <button class="close-btn" onclick="closeAdmin()">✕</button></div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('create', this)">Benutzer erstellen</button>
+      <button class="admin-tab" onclick="switchAdminTab('list', this)">Benutzerliste</button>
+    </div>
+    <div id="adminTabCreate">
+      <div class="form-group"><label>Benutzername</label><input type="text" id="newUsername" placeholder="Benutzername..."></div>
+      <div class="form-group"><label>Passwort</label><input type="password" id="newUserPass" placeholder="Passwort..."></div>
+      <div class="form-group"><label>Rolle</label>
+        <select id="newUserRole"><option value="member">Member</option><option value="admin">Admin</option></select>
+      </div>
+      <button class="btn-sm" style="width:100%;" onclick="createUser()">Benutzer erstellen</button>
+    </div>
+    <div id="adminTabList" style="display:none;"><div id="adminUserList"></div></div>
+  </div>
+</div>
+
+<!-- PREISLISTE MODAL -->
+<div class="modal-overlay" id="priceModal">
+  <div class="modal-box">
+    <h3 id="priceModalTitle">Artikel hinzufügen <button class="close-btn" onclick="closePriceModal()">✕</button></h3>
+    <input type="hidden" id="priceEditId">
+    <div class="form-group"><label>Artikelname</label><input type="text" id="priceItemName" placeholder="z.B. Amphetamin"></div>
+    <div class="form-group"><label>Einkaufspreis ($)</label><input type="number" id="priceItemBuy" placeholder="0"></div>
+    <div class="form-group"><label>Verkaufspreis ($)</label><input type="number" id="priceItemSell" placeholder="0"></div>
+    <button class="btn-sm" style="width:100%; background:linear-gradient(135deg,var(--gold),#d97706);" onclick="savePriceItem()">Speichern</button>
+  </div>
+</div>
+
+<!-- WEBHOOK SETTINGS MODAL -->
+<div class="modal-overlay" id="webhookModal">
+  <div class="modal-box">
+    <h3>Discord Webhook <button class="close-btn" onclick="closeWebhookModal()">✕</button></h3>
+    <div class="webhook-box">
+      <div class="form-group">
+        <label>Discord Webhook URL</label>
+        <input type="text" id="webhookUrl" placeholder="https://discord.com/api/webhooks/..." style="font-size:0.8rem;">
+      </div>
+      <div style="font-size:0.72rem; color:var(--text3); margin-top:0.3rem;">
+        Discord → Server → Kanal bearbeiten → Integrationen → Webhooks → Neuer Webhook
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Camper Nachricht</label>
+      <input type="text" id="webhookMsgCamper" placeholder="Dein Camper ist fertig! 🏕️">
+    </div>
+    <div class="form-group">
+      <label>Pflanzen Nachricht</label>
+      <input type="text" id="webhookMsgPflanzen" placeholder="Deine Pflanzen sind fertig! 🌿">
+    </div>
+    <div class="form-group">
+      <label style="color:var(--gold);">🧪 Test-Timer Nachricht (Admin)</label>
+      <input type="text" id="webhookMsgTest" placeholder="🧪 Admin Test-Timer abgelaufen!">
+    </div>
+    <button class="btn-sm" style="width:100%; background:linear-gradient(135deg,#5865f2,#7289da);" onclick="saveWebhook()">💾 Speichern & Testen</button>
+  </div>
+</div>
+
+<!-- ADMIN FAB -->
+<button class="admin-fab" id="adminFab" onclick="openAdmin()">⚙ Admin Panel</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+let users = JSON.parse(localStorage.getItem('mb_users') || 'null') || [
+  { username: 'admin', password: 'admin123', role: 'admin', displayName: 'Admin' },
+  { username: 'member1', password: 'pass123', role: 'member', displayName: 'Member1' }
+];
+
+let purchases = JSON.parse(localStorage.getItem('mb_purchases') || '[]');
+
+let preisliste = JSON.parse(localStorage.getItem('mb_preisliste') || 'null') || [
+  { id: 1, name: 'Amphetamin', buy: 15, sell: 20 },
+  { id: 2, name: 'Cold Coin', buy: 100000, sell: 0 },
+  { id: 3, name: 'Drogen (Fight)', buy: 600, sell: 0 },
+  { id: 4, name: 'Fullplates', buy: 8000, sell: 0 },
+  { id: 5, name: 'Halfplates', buy: 4000, sell: 0 },
+  { id: 6, name: 'Lootdrop Fackel', buy: 15000, sell: 0 },
+  { id: 7, name: 'MK2 Waffen', buy: 50000, sell: 0 },
+  { id: 8, name: 'Munitionshülsen', buy: 1500, sell: 0 },
+];
+
+let webhookConfig = JSON.parse(localStorage.getItem('mb_webhook') || 'null') || {
+  url: '',
+  msgCamper: 'Dein Camper ist fertig! 🏕️',
+  msgPflanzen: 'Deine Pflanzen sind fertig! 🌿',
+  msgTest: '🧪 Admin Test-Timer abgelaufen!'
+};
+
+let currentUser = null;
+const TIMER_DURATIONS = { camper: 90 * 60, pflanzen: 730 * 60, test: 10 };
+let timerState = JSON.parse(localStorage.getItem('mb_timers') || 'null') || { camper: { running: false, end: 0 }, pflanzen: { running: false, end: 0 }, test: { running: false, end: 0 } };
+if(!timerState.test) timerState.test = { running: false, end: 0 };
+let timerIntervals = {};
+
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function saveUsers() { save('mb_users', users); }
+function savePurchases() { save('mb_purchases', purchases); }
+function savePreisliste() { save('mb_preisliste', preisliste); }
+function saveWebhookConfig() { save('mb_webhook', webhookConfig); }
+function saveTimers() { save('mb_timers', timerState); }
+
+// ===== LOGIN =====
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const user = users.find(x => x.username === u && x.password === p);
+  if (!user) { document.getElementById('loginError').style.display = 'block'; return; }
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+  refreshUI();
+  if (user.role === 'admin') {
+    document.getElementById('adminFab').style.display = 'flex';
+    const tb = document.getElementById('testTimerBox');
+    if(tb) { tb.style.display = 'block'; document.getElementById('timerGrid').style.gridTemplateColumns = '1fr 1fr 1fr'; }
+  }
+  startAllRunningTimers();
+  updateWebhookStatus();
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('adminFab').style.display = 'none';
+  Object.values(timerIntervals).forEach(clearInterval);
+  timerIntervals = {};
+  goBack();
+}
+
+function refreshUI() {
+  const name = currentUser.displayName || currentUser.username;
+  document.getElementById('userNameTop').textContent = name;
+  document.getElementById('userAvatarTop').textContent = name[0].toUpperCase();
+  document.getElementById('bigAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileUsername').textContent = currentUser.username;
+  document.getElementById('profileRole').textContent = currentUser.role === 'admin' ? 'Administrator' : 'Member';
+  document.getElementById('profileRoleText').textContent = currentUser.role === 'admin' ? 'Admin' : 'Member';
+  updateMemberCount();
+  updatePreislisteUI();
+  updatePurchaseStats();
+}
+
+function updateMemberCount() {
+  document.getElementById('memberCount').textContent = users.length;
+  document.getElementById('statMembers').textContent = users.length;
+  const um = document.getElementById('userMemberCount');
+  if(um) um.textContent = users.length;
+}
+
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ===== VIEWS =====
+let currentView = null;
+function showView(name) {
+  document.getElementById('viewOverview').style.display = 'none';
+  document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
+  const map = { ubersicht: 'viewUbersicht', bank: 'viewBank', user: 'viewUser', upgrades: 'viewUpgrades' };
+  const el = document.getElementById(map[name]);
+  if(el) { el.classList.add('active'); currentView = name; }
+  if(name === 'bank') renderPurchases();
+  if(name === 'ubersicht') { updatePreislisteUI(); renderTimerDisplay(); }
+  if(name === 'user') {
+    document.getElementById('userPurchaseCount').textContent = purchases.length;
+    document.getElementById('userMemberCount').textContent = users.length;
+    document.getElementById('userPreisCount').textContent = preisliste.length;
+  }
+}
+function goBack() {
+  document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
+  const ov = document.getElementById('viewOverview');
+  ov.style.display = 'flex'; ov.style.flexDirection = 'column';
+  ov.style.alignItems = 'center'; ov.style.justifyContent = 'center';
+  currentView = null;
+}
+
+// ===== PREISLISTE =====
+function updatePreislisteUI() {
+  const count = preisliste.length;
+  const countEls = document.querySelectorAll('#preislisteCount, #statPreisliste');
+  countEls.forEach(el => el.textContent = count);
+  renderPreisliste();
+}
+
+function renderPreisliste() {
+  const grid = document.getElementById('preislisteGrid');
+  if(!grid) return;
+  if(preisliste.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text3); padding:2rem;">Keine Einträge vorhanden</div>';
+    return;
+  }
+  grid.innerHTML = preisliste.map(item => `
+    <div class="price-item">
+      <div>
+        <div class="pi-name">${item.name}</div>
+        <div class="pi-prices">Einkauf: $${fmtNum(item.buy)} &nbsp;|&nbsp; Verkauf: $${fmtNum(item.sell)}</div>
+      </div>
+      <div class="price-item-actions">
+        <button class="edit-btn" onclick="openEditPrice(${item.id})">✏</button>
+        <button class="del-btn" onclick="deletePriceItem(${item.id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddPrice() {
+  document.getElementById('priceModalTitle').innerHTML = 'Artikel hinzufügen <button class="close-btn" onclick="closePriceModal()">✕</button>';
+  document.getElementById('priceEditId').value = '';
+  document.getElementById('priceItemName').value = '';
+  document.getElementById('priceItemBuy').value = '';
+  document.getElementById('priceItemSell').value = '';
+  document.getElementById('priceModal').classList.add('open');
+}
+
+function openEditPrice(id) {
+  const item = preisliste.find(p => p.id === id);
+  if(!item) return;
+  document.getElementById('priceModalTitle').innerHTML = 'Artikel bearbeiten <button class="close-btn" onclick="closePriceModal()">✕</button>';
+  document.getElementById('priceEditId').value = id;
+  document.getElementById('priceItemName').value = item.name;
+  document.getElementById('priceItemBuy').value = item.buy;
+  document.getElementById('priceItemSell').value = item.sell;
+  document.getElementById('priceModal').classList.add('open');
+}
+
+function closePriceModal() { document.getElementById('priceModal').classList.remove('open'); }
+
+function savePriceItem() {
+  const name = document.getElementById('priceItemName').value.trim();
+  const buy = parseFloat(document.getElementById('priceItemBuy').value) || 0;
+  const sell = parseFloat(document.getElementById('priceItemSell').value) || 0;
+  if(!name) { showToast('Bitte einen Namen eingeben!', true); return; }
+  const editId = parseInt(document.getElementById('priceEditId').value);
+  if(editId) {
+    const idx = preisliste.findIndex(p => p.id === editId);
+    if(idx > -1) preisliste[idx] = { ...preisliste[idx], name, buy, sell };
+    showToast('Artikel aktualisiert!');
+  } else {
+    const newId = Date.now();
+    preisliste.push({ id: newId, name, buy, sell });
+    showToast('Artikel hinzugefügt!');
+  }
+  savePreisliste();
+  closePriceModal();
+  updatePreislisteUI();
+}
+
+function deletePriceItem(id) {
+  if(!confirm('Artikel wirklich löschen?')) return;
+  preisliste = preisliste.filter(p => p.id !== id);
+  savePreisliste();
+  updatePreislisteUI();
+  showToast('Artikel gelöscht');
+}
+
+// ===== TIMER =====
+function renderTimerDisplay() {
+  ['camper', 'pflanzen', 'test'].forEach(name => {
+    const state = timerState[name];
+    const el = document.getElementById('timer' + cap(name));
+    const statusEl = document.getElementById('timer' + cap(name) + 'Status');
+    const btn = document.getElementById('btn' + cap(name));
+    if(!el) return;
+
+    if(state.running) {
+      const remaining = Math.max(0, Math.floor((state.end - Date.now()) / 1000));
+      el.textContent = formatTime(remaining);
+      el.className = 'timer-display ' + (remaining <= 5 ? 'urgent' : 'running');
+      if(statusEl) statusEl.textContent = '⏱ Läuft...';
+      if(btn) { btn.textContent = '⏹ Stop'; btn.classList.add('stop'); }
+    } else {
+      el.textContent = formatTime(TIMER_DURATIONS[name]);
+      el.className = 'timer-display';
+      if(statusEl) statusEl.textContent = 'Inaktiv';
+      if(btn) {
+        btn.textContent = name === 'camper' ? '▶ Start (1h30)' : name === 'pflanzen' ? '▶ Start (~12h)' : '▶ Start (10s)';
+        btn.classList.remove('stop');
+      }
+    }
+  });
+}
+
+function toggleTimer(name) {
+  const state = timerState[name];
+  if(state.running) {
+    // Stop
+    state.running = false;
+    state.end = 0;
+    clearInterval(timerIntervals[name]);
+    delete timerIntervals[name];
+    saveTimers();
+    renderTimerDisplay();
+    showToast(cap(name) + ' Timer gestoppt');
+  } else {
+    // Start
+    state.running = true;
+    state.end = Date.now() + TIMER_DURATIONS[name] * 1000;
+    saveTimers();
+    startTimerInterval(name);
+    renderTimerDisplay();
+    showToast(cap(name) + ' Timer gestartet!');
+  }
+}
+
+function startTimerInterval(name) {
+  if(timerIntervals[name]) clearInterval(timerIntervals[name]);
+  timerIntervals[name] = setInterval(() => {
+    const state = timerState[name];
+    if(!state.running) { clearInterval(timerIntervals[name]); return; }
+    const remaining = Math.floor((state.end - Date.now()) / 1000);
+    const el = document.getElementById('timer' + cap(name));
+    const statusEl = document.getElementById('timer' + cap(name) + 'Status');
+    if(remaining <= 0) {
+      // Timer done
+      clearInterval(timerIntervals[name]);
+      delete timerIntervals[name];
+      state.running = false;
+      state.end = 0;
+      saveTimers();
+      if(el) { el.textContent = '00:00:00'; el.className = 'timer-display'; }
+      if(statusEl) statusEl.textContent = '✅ Fertig!';
+      const btn = document.getElementById('btn' + cap(name));
+      if(btn) { btn.textContent = name === 'camper' ? '▶ Start (1h30)' : name === 'pflanzen' ? '▶ Start (~12h)' : '▶ Start (10s)'; btn.classList.remove('stop'); }
+      showToast('🎉 ' + (name === 'camper' ? 'Dein Camper ist fertig!' : name === 'pflanzen' ? 'Deine Pflanzen sind fertig!' : '🧪 Test-Timer abgelaufen!'));
+      sendDiscordNotification(name);
+    } else {
+      if(el) {
+        el.textContent = formatTime(remaining);
+        el.className = 'timer-display ' + (remaining <= (name === 'test' ? 5 : 300) ? 'urgent' : 'running');
+      }
+      if(statusEl) {
+        if(name === 'test') {
+          statusEl.textContent = `⏱ Noch ${remaining} Sek`;
+        } else {
+          const mins = Math.floor(remaining / 60);
+          statusEl.textContent = `⏱ Noch ${mins} Min`;
+        }
+      }
+    }
+  }, 1000);
+}
+
+function startAllRunningTimers() {
+  ['camper', 'pflanzen', 'test'].forEach(name => {
+    const state = timerState[name];
+    if(state.running) {
+      const remaining = (state.end - Date.now()) / 1000;
+      if(remaining > 0) {
+        startTimerInterval(name);
+      } else {
+        state.running = false;
+        state.end = 0;
+        saveTimers();
+      }
+    }
+  });
+  renderTimerDisplay();
+}
+
+// ===== DISCORD WEBHOOK =====
+function updateWebhookStatus() {
+  const dot = document.getElementById('discordDot');
+  const txt = document.getElementById('discordStatusText');
+  if(!dot || !txt) return;
+  if(webhookConfig.url && webhookConfig.url.startsWith('https://discord.com/api/webhooks/')) {
+    dot.className = 'discord-dot active';
+    txt.textContent = 'Discord: aktiv';
+  } else {
+    dot.className = 'discord-dot';
+    txt.textContent = 'Discord: nicht konfiguriert';
+  }
+}
+
+async function sendDiscordNotification(timerName) {
+  if(!webhookConfig.url) {
+    showToast('Kein Discord Webhook konfiguriert!', true);
+    return;
+  }
+  const msg = timerName === 'camper' ? webhookConfig.msgCamper : timerName === 'pflanzen' ? webhookConfig.msgPflanzen : webhookConfig.msgTest;
+  const proxyUrl = window.location.origin + '/discord';
+  try {
+    const res = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhookUrl: webhookConfig.url, message: msg, username: 'Macher Buissnes' })
+    });
+    const data = await res.json();
+    if(data.ok) {
+      showToast('Discord Nachricht gesendet!', false, true);
+    } else {
+      showToast('Discord Fehler (Status ' + data.status + ') – Webhook URL prüfen!', true);
+    }
+  } catch(e) {
+    showToast('Server nicht erreichbar! Bitte node server.js starten.', true);
+  }
+}
+  document.getElementById('webhookUrl').value = webhookConfig.url || '';
+  document.getElementById('webhookMsgCamper').value = webhookConfig.msgCamper;
+  document.getElementById('webhookMsgPflanzen').value = webhookConfig.msgPflanzen;
+  document.getElementById('webhookMsgTest').value = webhookConfig.msgTest || '🧪 Admin Test-Timer abgelaufen!';
+  document.getElementById('webhookModal').classList.add('open');
+}
+
+function closeWebhookModal() { document.getElementById('webhookModal').classList.remove('open'); }
+
+async function saveWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  const msgC = document.getElementById('webhookMsgCamper').value.trim() || 'Dein Camper ist fertig! 🏕️';
+  const msgP = document.getElementById('webhookMsgPflanzen').value.trim() || 'Deine Pflanzen sind fertig! 🌿';
+  const msgT = document.getElementById('webhookMsgTest').value.trim() || '🧪 Admin Test-Timer abgelaufen!';
+  webhookConfig = { url, msgCamper: msgC, msgPflanzen: msgP, msgTest: msgT };
+  saveWebhookConfig();
+  closeWebhookModal();
+  updateWebhookStatus();
+  if(url) {
+    try {
+      const res = await fetch(window.location.origin + '/discord', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhookUrl: url, message: '✅ Macher Buissnes – Webhook erfolgreich konfiguriert!', username: 'Macher Buissnes' })
+      });
+      const data = await res.json();
+      if(data.ok) {
+        showToast('Webhook gespeichert & Testnachricht gesendet!', false, true);
+      } else {
+        showToast('Gespeichert, aber Discord meldet Fehler ' + data.status + ' – URL prüfen!', true);
+      }
+    } catch(e) {
+      showToast('Gespeichert! Server nicht erreichbar – node server.js starten!', true);
+    }
+  } else {
+    showToast('Webhook gespeichert (ohne URL)');
+  }
+}
+
+// ===== BANK =====
+function addPurchase() {
+  const seller = document.getElementById('bSeller').value.trim();
+  const price = parseFloat(document.getElementById('bPrice').value);
+  const buyer = document.getElementById('bBuyer').value.trim();
+  if(!seller || !price || !buyer) { showToast('Bitte alle Felder ausfüllen!', true); return; }
+  purchases.unshift({ seller, price, buyer, date: new Date().toLocaleString('de-DE'), id: Date.now() });
+  savePurchases();
+  document.getElementById('bSeller').value = '';
+  document.getElementById('bPrice').value = '';
+  document.getElementById('bBuyer').value = '';
+  renderPurchases();
+  updatePurchaseStats();
+  showToast('Einkauf hinzugefügt!');
+}
+
+function renderPurchases() {
+  const list = document.getElementById('purchaseList');
+  if(!list) return;
+  if(purchases.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color:var(--text3); padding:2rem; font-size:0.85rem;">Noch keine Einkäufe vorhanden</div>';
+    return;
+  }
+  list.innerHTML = purchases.map(p => `
+    <div class="purchase-item">
+      <div>
+        <div class="pi-seller">🏪 ${p.seller}</div>
+        <div class="pi-buyer">👤 ${p.buyer} · ${p.date}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="pi-price">$${fmtNum(p.price)}</div>
+        <button class="del-btn" onclick="deletePurchase(${p.id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deletePurchase(id) {
+  purchases = purchases.filter(p => p.id !== id);
+  savePurchases();
+  renderPurchases();
+  updatePurchaseStats();
+}
+
+function updatePurchaseStats() {
+  const total = purchases.reduce((s,p) => s+p.price, 0);
+  const te = document.getElementById('totalRevenue');
+  const pc = document.getElementById('purchaseCount');
+  if(te) te.textContent = '$' + fmtNum(total);
+  if(pc) pc.textContent = purchases.length;
+}
+
+// ===== USER SETTINGS =====
+function saveSettings() {
+  const newName = document.getElementById('newDisplayName').value.trim();
+  const newPass = document.getElementById('newPassword').value;
+  const confPass = document.getElementById('confirmPassword').value;
+  if(newPass && newPass !== confPass) { showToast('Passwörter stimmen nicht überein!', true); return; }
+  if(newName) {
+    currentUser.displayName = newName;
+    refreshUI();
+  }
+  if(newPass) currentUser.password = newPass;
+  saveUsers();
+  document.getElementById('newDisplayName').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  showToast('Einstellungen gespeichert!');
+}
+
+// ===== UPGRADES =====
+function toggleUpgrade(card) {
+  if(card.classList.contains('owned')) {
+    card.classList.remove('owned');
+    const b = card.querySelector('.uc-badge'); if(b) b.remove();
+    showToast('Upgrade entfernt');
+  } else {
+    card.classList.add('owned');
+    const b = document.createElement('div');
+    b.className = 'uc-badge'; b.textContent = 'BESESSEN';
+    card.appendChild(b);
+    showToast('Upgrade aktiviert!');
+  }
+}
+
+// ===== ADMIN =====
+function openAdmin() { document.getElementById('adminPanel').classList.add('open'); renderAdminUserList(); }
+function closeAdmin() { document.getElementById('adminPanel').classList.remove('open'); }
+
+function switchAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('adminTabCreate').style.display = tab === 'create' ? 'block' : 'none';
+  document.getElementById('adminTabList').style.display = tab === 'list' ? 'block' : 'none';
+  if(tab === 'list') renderAdminUserList();
+}
+
+function createUser() {
+  const u = document.getElementById('newUsername').value.trim();
+  const p = document.getElementById('newUserPass').value;
+  const r = document.getElementById('newUserRole').value;
+  if(!u || !p) { showToast('Bitte alle Felder ausfüllen!', true); return; }
+  if(users.find(x => x.username === u)) { showToast('Benutzername bereits vergeben!', true); return; }
+  users.push({ username: u, password: p, role: r, displayName: u });
+  saveUsers();
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newUserPass').value = '';
+  updateMemberCount();
+  showToast(`Benutzer "${u}" erstellt!`);
+  renderAdminUserList();
+}
+
+function renderAdminUserList() {
+  const list = document.getElementById('adminUserList');
+  list.innerHTML = users.map(u => `
+    <div class="user-list-item">
+      <div>
+        <div class="ul-name">${u.displayName || u.username}</div>
+        <div style="font-size:0.7rem; color:var(--text3);">@${u.username}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span class="ul-role ${u.role}">${u.role}</span>
+        ${u.username !== currentUser.username ? `<button class="del-btn" onclick="deleteUser('${u.username}')">✕</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteUser(username) {
+  if(!confirm(`Benutzer "${username}" wirklich löschen?`)) return;
+  users = users.filter(u => u.username !== username);
+  saveUsers();
+  renderAdminUserList();
+  updateMemberCount();
+  showToast('Benutzer gelöscht');
+}
+
+// ===== HELPERS =====
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function fmtNum(n) { return Number(n).toLocaleString('de-DE'); }
+function formatTime(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function showToast(msg, isError=false, isDiscord=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : isDiscord ? ' discord' : '');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
