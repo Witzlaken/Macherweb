@@ -899,6 +899,8 @@ async function sendDiscordNotification(timerName) {
     showToast('Server nicht erreichbar! Bitte node server.js starten.', true);
   }
 }
+
+function openWebhookSettings() {
   document.getElementById('webhookUrl').value = webhookConfig.url || '';
   document.getElementById('webhookMsgCamper').value = webhookConfig.msgCamper;
   document.getElementById('webhookMsgPflanzen').value = webhookConfig.msgPflanzen;
