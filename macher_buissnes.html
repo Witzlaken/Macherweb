@@ -505,13 +505,7 @@
 
 <script>
 // ===== DATA =====
-let users = JSON.parse(localStorage.getItem('mb_users') || 'null') || [
-  { username: 'admin', password: 'admin123', role: 'admin', displayName: 'Admin' },
-  { username: 'member1', password: 'pass123', role: 'member', displayName: 'Member1' }
-];
-
 let purchases = JSON.parse(localStorage.getItem('mb_purchases') || '[]');
-
 let preisliste = JSON.parse(localStorage.getItem('mb_preisliste') || 'null') || [
   { id: 1, name: 'Amphetamin', buy: 15, sell: 20 },
   { id: 2, name: 'Cold Coin', buy: 100000, sell: 0 },
@@ -522,50 +516,74 @@ let preisliste = JSON.parse(localStorage.getItem('mb_preisliste') || 'null') || 
   { id: 7, name: 'MK2 Waffen', buy: 50000, sell: 0 },
   { id: 8, name: 'Munitionshülsen', buy: 1500, sell: 0 },
 ];
-
 let webhookConfig = JSON.parse(localStorage.getItem('mb_webhook') || 'null') || {
-  url: '',
-  msgCamper: 'Dein Camper ist fertig! 🏕️',
-  msgPflanzen: 'Deine Pflanzen sind fertig! 🌿',
-  msgTest: '🧪 Admin Test-Timer abgelaufen!'
+  url: '', msgCamper: 'Dein Camper ist fertig! 🏕️', msgPflanzen: 'Deine Pflanzen sind fertig! 🌿', msgTest: '🧪 Admin Test-Timer abgelaufen!'
 };
 
 let currentUser = null;
+let authToken = localStorage.getItem('mb_token') || null;
+let allUsers = []; // gecachte Userliste (nur Admin)
+
 const TIMER_DURATIONS = { camper: 90 * 60, pflanzen: 730 * 60, test: 10 };
 let timerState = JSON.parse(localStorage.getItem('mb_timers') || 'null') || { camper: { running: false, end: 0 }, pflanzen: { running: false, end: 0 }, test: { running: false, end: 0 } };
 if(!timerState.test) timerState.test = { running: false, end: 0 };
 let timerIntervals = {};
 
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
-function saveUsers() { save('mb_users', users); }
 function savePurchases() { save('mb_purchases', purchases); }
 function savePreisliste() { save('mb_preisliste', preisliste); }
 function saveWebhookConfig() { save('mb_webhook', webhookConfig); }
 function saveTimers() { save('mb_timers', timerState); }
 
+// API Helper
+async function api(method, endpoint, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(window.location.origin + endpoint, opts);
+  return res.json();
+}
+
 // ===== LOGIN =====
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
-  const user = users.find(x => x.username === u && x.password === p);
-  if (!user) { document.getElementById('loginError').style.display = 'block'; return; }
-  currentUser = user;
-  document.getElementById('loginScreen').style.display = 'none';
-  const app = document.getElementById('app');
-  app.style.display = 'flex';
-  app.style.flexDirection = 'column';
-  refreshUI();
-  if (user.role === 'admin') {
-    document.getElementById('adminFab').style.display = 'flex';
-    const tb = document.getElementById('testTimerBox');
-    if(tb) { tb.style.display = 'block'; document.getElementById('timerGrid').style.gridTemplateColumns = '1fr 1fr 1fr'; }
+  if(!u || !p) return;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  try {
+    const data = await api('POST', '/api/login', { username: u, password: p });
+    if (!data.ok) {
+      errEl.textContent = data.error || 'Ungültige Anmeldedaten';
+      errEl.style.display = 'block';
+      return;
+    }
+    authToken = data.token;
+    localStorage.setItem('mb_token', authToken);
+    currentUser = data.user;
+    document.getElementById('loginScreen').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.display = 'flex';
+    app.style.flexDirection = 'column';
+    await refreshUI();
+    if (currentUser.role === 'admin') {
+      document.getElementById('adminFab').style.display = 'flex';
+      const tb = document.getElementById('testTimerBox');
+      if(tb) { tb.style.display = 'block'; document.getElementById('timerGrid').style.gridTemplateColumns = '1fr 1fr 1fr'; }
+    }
+    startAllRunningTimers();
+    updateWebhookStatus();
+  } catch(e) {
+    errEl.textContent = 'Server nicht erreichbar!';
+    errEl.style.display = 'block';
   }
-  startAllRunningTimers();
-  updateWebhookStatus();
 }
 
 function doLogout() {
   currentUser = null;
+  authToken = null;
+  allUsers = [];
+  localStorage.removeItem('mb_token');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginUser').value = '';
@@ -577,7 +595,7 @@ function doLogout() {
   goBack();
 }
 
-function refreshUI() {
+async function refreshUI() {
   const name = currentUser.displayName || currentUser.username;
   document.getElementById('userNameTop').textContent = name;
   document.getElementById('userAvatarTop').textContent = name[0].toUpperCase();
@@ -586,19 +604,56 @@ function refreshUI() {
   document.getElementById('profileUsername').textContent = currentUser.username;
   document.getElementById('profileRole').textContent = currentUser.role === 'admin' ? 'Administrator' : 'Member';
   document.getElementById('profileRoleText').textContent = currentUser.role === 'admin' ? 'Admin' : 'Member';
-  updateMemberCount();
+  await updateMemberCount();
   updatePreislisteUI();
   updatePurchaseStats();
 }
 
-function updateMemberCount() {
-  document.getElementById('memberCount').textContent = users.length;
-  document.getElementById('statMembers').textContent = users.length;
-  const um = document.getElementById('userMemberCount');
-  if(um) um.textContent = users.length;
+async function updateMemberCount() {
+  try {
+    const data = await api('GET', '/api/users');
+    if(data.ok) {
+      allUsers = data.users;
+      const c = data.count;
+      document.getElementById('memberCount').textContent = c;
+      document.getElementById('statMembers').textContent = c;
+      const um = document.getElementById('userMemberCount');
+      if(um) um.textContent = c;
+    }
+  } catch(e) {}
+}
+
+// Auto-Login mit gespeichertem Token beim Seitenaufruf
+async function tryAutoLogin() {
+  if(!authToken) return;
+  try {
+    const data = await api('GET', '/api/me');
+    if(data.ok) {
+      currentUser = data.user;
+      document.getElementById('loginScreen').style.display = 'none';
+      const app = document.getElementById('app');
+      app.style.display = 'flex';
+      app.style.flexDirection = 'column';
+      await refreshUI();
+      if(currentUser.role === 'admin') {
+        document.getElementById('adminFab').style.display = 'flex';
+        const tb = document.getElementById('testTimerBox');
+        if(tb) { tb.style.display = 'block'; document.getElementById('timerGrid').style.gridTemplateColumns = '1fr 1fr 1fr'; }
+      }
+      startAllRunningTimers();
+      updateWebhookStatus();
+    } else {
+      localStorage.removeItem('mb_token');
+      authToken = null;
+    }
+  } catch(e) {
+    localStorage.removeItem('mb_token');
+    authToken = null;
+  }
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+tryAutoLogin();
 
 // ===== VIEWS =====
 let currentView = null;
@@ -936,21 +991,26 @@ function updatePurchaseStats() {
 }
 
 // ===== USER SETTINGS =====
-function saveSettings() {
+async function saveSettings() {
   const newName = document.getElementById('newDisplayName').value.trim();
   const newPass = document.getElementById('newPassword').value;
   const confPass = document.getElementById('confirmPassword').value;
   if(newPass && newPass !== confPass) { showToast('Passwörter stimmen nicht überein!', true); return; }
-  if(newName) {
-    currentUser.displayName = newName;
-    refreshUI();
-  }
-  if(newPass) currentUser.password = newPass;
-  saveUsers();
-  document.getElementById('newDisplayName').value = '';
-  document.getElementById('newPassword').value = '';
-  document.getElementById('confirmPassword').value = '';
-  showToast('Einstellungen gespeichert!');
+  const payload = {};
+  if(newName) payload.displayName = newName;
+  if(newPass) payload.password = newPass;
+  if(!Object.keys(payload).length) { showToast('Keine Änderungen eingegeben', true); return; }
+  try {
+    const data = await api('PUT', '/api/me', payload);
+    if(data.ok) {
+      currentUser = { ...currentUser, ...data.user };
+      await refreshUI();
+      document.getElementById('newDisplayName').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      showToast('Einstellungen gespeichert!');
+    } else { showToast(data.error || 'Fehler!', true); }
+  } catch(e) { showToast('Server nicht erreichbar!', true); }
 }
 
 // ===== UPGRADES =====
@@ -980,44 +1040,55 @@ function switchAdminTab(tab, btn) {
   if(tab === 'list') renderAdminUserList();
 }
 
-function createUser() {
+async function createUser() {
   const u = document.getElementById('newUsername').value.trim();
   const p = document.getElementById('newUserPass').value;
   const r = document.getElementById('newUserRole').value;
   if(!u || !p) { showToast('Bitte alle Felder ausfüllen!', true); return; }
-  if(users.find(x => x.username === u)) { showToast('Benutzername bereits vergeben!', true); return; }
-  users.push({ username: u, password: p, role: r, displayName: u });
-  saveUsers();
-  document.getElementById('newUsername').value = '';
-  document.getElementById('newUserPass').value = '';
-  updateMemberCount();
-  showToast(`Benutzer "${u}" erstellt!`);
-  renderAdminUserList();
+  try {
+    const data = await api('POST', '/api/users', { username: u, password: p, role: r });
+    if(data.ok) {
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newUserPass').value = '';
+      await updateMemberCount();
+      showToast(`Benutzer "${u}" erstellt!`);
+      renderAdminUserList();
+    } else { showToast(data.error || 'Fehler!', true); }
+  } catch(e) { showToast('Server nicht erreichbar!', true); }
 }
 
-function renderAdminUserList() {
+async function renderAdminUserList() {
   const list = document.getElementById('adminUserList');
-  list.innerHTML = users.map(u => `
-    <div class="user-list-item">
-      <div>
-        <div class="ul-name">${u.displayName || u.username}</div>
-        <div style="font-size:0.7rem; color:var(--text3);">@${u.username}</div>
+  list.innerHTML = '<div style="color:var(--text3);text-align:center;padding:1rem;">Laden...</div>';
+  try {
+    const data = await api('GET', '/api/users');
+    if(!data.ok) { list.innerHTML = '<div style="color:var(--accent2);padding:1rem;">Fehler beim Laden</div>'; return; }
+    allUsers = data.users;
+    list.innerHTML = data.users.map(u => `
+      <div class="user-list-item">
+        <div>
+          <div class="ul-name">${u.displayName || u.username}</div>
+          <div style="font-size:0.7rem; color:var(--text3);">@${u.username}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="ul-role ${u.role}">${u.role}</span>
+          ${u.username !== currentUser.username ? `<button class="del-btn" onclick="deleteUser('${u.username}')">✕</button>` : ''}
+        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:0.5rem;">
-        <span class="ul-role ${u.role}">${u.role}</span>
-        ${u.username !== currentUser.username ? `<button class="del-btn" onclick="deleteUser('${u.username}')">✕</button>` : ''}
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  } catch(e) { list.innerHTML = '<div style="color:var(--accent2);padding:1rem;">Server nicht erreichbar</div>'; }
 }
 
-function deleteUser(username) {
+async function deleteUser(username) {
   if(!confirm(`Benutzer "${username}" wirklich löschen?`)) return;
-  users = users.filter(u => u.username !== username);
-  saveUsers();
-  renderAdminUserList();
-  updateMemberCount();
-  showToast('Benutzer gelöscht');
+  try {
+    const data = await api('DELETE', '/api/users/' + encodeURIComponent(username));
+    if(data.ok) {
+      await updateMemberCount();
+      renderAdminUserList();
+      showToast('Benutzer gelöscht');
+    } else { showToast(data.error || 'Fehler!', true); }
+  } catch(e) { showToast('Server nicht erreichbar!', true); }
 }
 
 // ===== HELPERS =====
