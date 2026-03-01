@@ -2,7 +2,6 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3001;
@@ -59,7 +58,7 @@ function readBody(req) {
 }
 
 function proxyDiscord(webhookUrl, body, res) {
-  const parsed = url.parse(webhookUrl);
+  const parsed = new URL(webhookUrl);
   const postData = JSON.stringify(body);
   const opts = { hostname: parsed.hostname, path: parsed.path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } };
   const req = https.request(opts, (dr) => {
@@ -73,7 +72,7 @@ function proxyDiscord(webhookUrl, body, res) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const purl = url.parse(req.url, true);
+  const purl = new URL(req.url, `http://localhost`);
   const p = purl.pathname;
 
   if (req.method === 'OPTIONS') { setCORS(res); res.writeHead(204); res.end(); return; }
