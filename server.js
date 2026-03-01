@@ -60,7 +60,7 @@ function readBody(req) {
 function proxyDiscord(webhookUrl, body, res) {
   const parsed = new URL(webhookUrl);
   const postData = JSON.stringify(body);
-  const opts = { hostname: parsed.hostname, path: parsed.path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } };
+  const opts = { hostname: parsed.hostname, path: parsed.pathname, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } };
   const req = https.request(opts, (dr) => {
     let d = '';
     dr.on('data', c => d += c);
